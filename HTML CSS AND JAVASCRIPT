@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexon Air Store - Bill Generator</title>
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.title {
+    margin-bottom: 30px;
+    font-size: 24px;
+}
+
+.form-container {
+    margin-bottom: 20px;
+}
+
+.form-container label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-container input[type="text"],
+.form-container input[type="email"],
+.form-container input[type="number"] {
+    width: calc(50% - 10px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.form-container input[type="number"] {
+    width: 100px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+.hidden {
+    display: none;
+}
+
+.product-container,
+.bill-container {
+    text-align: left;
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.bill-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.bill-container th,
+.bill-container td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.bill-container th {
+    background-color: #f2f2f2;
+}
+
+.bill-container strong {
+    font-size: 18px;
+}
+
+.customer-info {
+    margin-top: 20px;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Nexon Air Store</h1>
+        <form class="form-container" id="customerDetails">
+            <label for="customerName">Customer Name:</label>
+            <input type="text" id="customerName" name="customerName" required>
+            <label for="customerEmail">Customer Email:</label>
+            <input type="email" id="customerEmail" name="customerEmail" required>
+            <input type="submit" class="btn" id="submitCustomerDetailsBtn" value="Submit">
+        </form>
+        <div class="form-container hidden" id="billForm">
+            <label for="numProducts">Number of Products:</label>
+            <input type="number" id="numProducts" name="numProducts" min="1" required>
+            <button class="btn" id="generateBtn">Generate Bill</button>
+        </div>
+        <div class="product-container hidden" id="productDetails">
+            <!-- Product details will be displayed here -->
+        </div>
+        <div class="bill-container hidden" id="bill">
+            <!-- Bill details will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('customerDetails').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var customerName = document.getElementById('customerName').value;
+            var customerEmail = document.getElementById('customerEmail').value;
+            document.getElementById('customerDetails').classList.add('hidden');
+            document.getElementById('billForm').classList.remove('hidden');
+            document.getElementById('customerNameDisplay').innerText = customerName;
+            document.getElementById('customerEmailDisplay').innerText = customerEmail;
+        });
+
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            var numProducts = parseInt(document.getElementById('numProducts').value);
+
+            if (numProducts > 0) {
+                displayProductForm(numProducts);
+            } else {
+                alert('Please enter a valid number of products.');
+            }
+        });
+
+        function displayProductForm(numProducts) {
+            var productDetails = document.getElementById('productDetails');
+            productDetails.innerHTML = '';
+
+            for (var i = 1; i <= numProducts; i++) {
+                var div = document.createElement('div');
+                div.innerHTML = `
+                    <h3>Product ${i}</h3>
+                    <label for="productName${i}">Name:</label>
+                    <input type="text" id="productName${i}" name="productName${i}" required>
+                    <label for="productPrice${i}">Price:</label>
+                    <input type="number" id="productPrice${i}" name="productPrice${i}" min="0.01" step="0.01" required>
+                    <label for="productQuantity${i}">Quantity:</label>
+                    <input type="number" id="productQuantity${i}" name="productQuantity${i}" min="1" required>
+                `;
+                productDetails.appendChild(div);
+            }
+
+            productDetails.classList.remove('hidden');
+
+            var button = document.createElement('button');
+            button.textContent = 'Calculate Bill';
+            productDetails.appendChild(button);
+
+            button.addEventListener('click', function() {
+                calculateBill(numProducts);
+            });
+        }
+
+        function calculateBill(numProducts) {
+            var products = [];
+            var totalBill = 0;
+
+            for (var i = 1; i <= numProducts; i++) {
+                var name = document.getElementById(`productName${i}`).value;
+                var price = parseFloat(document.getElementById(`productPrice${i}`).value);
+                var quantity = parseInt(document.getElementById(`productQuantity${i}`).value);
+                var total = price * quantity;
+
+                products.push({ name: name, price: price, quantity: quantity, total: total });
+                totalBill += total;
+            }
+
+            // Apply tax and discount if applicable
+            var tax = totalBill >= 100 ? 2.9 : 0;
+            var discount = totalBill >= 100 ? 10 : 0;
+
+            var taxAmount = (totalBill * tax) / 100;
+            var discountAmount = (totalBill * discount) / 100;
+
+            totalBill = totalBill + taxAmount - discountAmount;
+
+            displayBill(products, totalBill, taxAmount, discountAmount);
+        }
+
+        function displayBill(products, totalBill, taxAmount, discountAmount) {
+            var billDiv = document.getElementById('bill');
+            billDiv.innerHTML = '';
+
+            var customerName = document.getElementById('customerName').value;
+            var customerEmail = document.getElementById('customerEmail').value;
+
+            var customerInfo = document.createElement('div');
+            customerInfo.innerHTML = `
+                <p><strong>Customer Name:</strong> <span id="customerNameDisplay">${customerName}</span></p>
+                <p><strong>Customer Email:</strong> <span id="customerEmailDisplay">${customerEmail}</span></p>
+            `;
+            billDiv.appendChild(customerInfo);
+
+            var table = document.createElement('table');
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            `;
+
+            var tbody = table.querySelector('tbody');
+            products.forEach(function(product) {
+                var row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>$${product.price.toFixed(2)}</td>
+                    <td>${product.quantity}</td>
+                    <td>$${product.total.toFixed(2)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            billDiv.appendChild(table);
+
+            var taxRow = document.createElement('div');
+            taxRow.innerHTML = `<strong>Tax (2.9%): $${taxAmount.toFixed(2)}</strong>`;
+            billDiv.appendChild(taxRow);
+
+            var discountRow = document.createElement('div');
+            discountRow.innerHTML = `<strong>Discount (10%): $${discountAmount.toFixed(2)}</strong>`;
+            billDiv.appendChild(discountRow);
+
+            var totalRow = document.createElement('div');
+            totalRow.innerHTML = `<strong>Total Bill: $${totalBill.toFixed(2)}</strong>`;
+            billDiv.appendChild(totalRow);
+
+            billDiv.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
