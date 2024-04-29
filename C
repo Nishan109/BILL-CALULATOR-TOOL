@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <string.h>
+
+// Define a structure for product
+struct Product {
+    char name[50];
+    float price;
+    int quantity;
+};
+
+// Function to calculate the total price of a product
+float calculateTotal(struct Product p) {
+    return p.price * p.quantity;
+}
+
+int main() {
+    struct Product products[10];
+    char customerName[50];
+    char customerEmail[50];
+    int numProducts;
+    float totalBill = 0.0;
+    float taxRate = 2.9;
+    float discountRate = 10;
+
+    // Input customer details
+    printf("Enter customer name: ");
+    fgets(customerName, sizeof(customerName), stdin);
+    strtok(customerName, "\n"); // Remove trailing newline
+    printf("Enter customer email: ");
+    fgets(customerEmail, sizeof(customerEmail), stdin);
+    strtok(customerEmail, "\n"); // Remove trailing newline
+
+    // Input number of products
+    printf("Enter the number of products: ");
+    scanf("%d", &numProducts);
+    getchar(); // Consume the newline character left in the input buffer
+
+    // Input details for each product
+    for (int i = 0; i < numProducts; i++) {
+        printf("\nEnter details for product %d:\n", i + 1);
+        // Input product name
+        printf("Name: ");
+        fgets(products[i].name, sizeof(products[i].name), stdin);
+        strtok(products[i].name, "\n"); // Remove trailing newline
+        // Input product price
+        printf("Price: ");
+        scanf("%f", &products[i].price);
+        // Input product quantity
+        printf("Quantity: ");
+        scanf("%d", &products[i].quantity);
+        getchar(); // Consume the newline character left in the input buffer
+        totalBill += calculateTotal(products[i]); // Add the total price of the current product to the total bill
+    }
+
+    // Calculate tax
+    float taxAmount = (totalBill * taxRate) / 100;
+
+    // Apply discount if applicable
+    float discountAmount = 0;
+    if (totalBill >= 100) {
+        discountAmount = (totalBill * discountRate) / 100;
+    }
+
+    // Apply tax and discount to the total bill
+    totalBill = totalBill + taxAmount - discountAmount;
+
+    // Print the bill
+    printf("\nCustomer Name: %s\n", customerName);
+    printf("Customer Email: %s\n", customerEmail);
+    printf("\nProduct Bill:\n");
+    printf("-------------------------------------------------------\n");
+    printf("Name\t\tPrice\t\tQuantity\tTotal\n");
+    printf("-------------------------------------------------------\n");
+    for (int i = 0; i < numProducts; i++) {
+        printf("%s\t\t%.2f\t\t%d\t\t%.2f\n", products[i].name, products[i].price, products[i].quantity, calculateTotal(products[i]));
+    }
+    printf("-------------------------------------------------------\n");
+    printf("Total Bill: %.2f\n", totalBill);
+    printf("Tax (2.9%%): %.2f\n", taxAmount);
+    printf("Discount (10%%): %.2f\n", discountAmount);
+
+    return 0;
+}
